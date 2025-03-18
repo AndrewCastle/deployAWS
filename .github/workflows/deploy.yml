@@ -32,7 +32,8 @@ jobs:
       id: check_deployment
       run: |
         ACTIVE_DEPLOYMENT=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
-        if [ "$ACTIVE_DEPLOYMENT" != "None" ]; then
+        echo "Active deployment ID: $ACTIVE_DEPLOYMENT"
+        if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ "$ACTIVE_DEPLOYMENT" != "" ]; then
           echo "There is already an active deployment with ID $ACTIVE_DEPLOYMENT."
           echo "Active Deployment ID=$ACTIVE_DEPLOYMENT" >> $GITHUB_ENV
         else
@@ -40,7 +41,7 @@ jobs:
         fi
 
     - name: Wait for active deployment to finish (if any)
-      if: env.ACTIVE_DEPLOYMENT != 'None'
+      if: env.ACTIVE_DEPLOYMENT != 'None' && env.ACTIVE_DEPLOYMENT != ''
       run: |
         echo "Waiting for active deployment $ACTIVE_DEPLOYMENT to finish..."
         aws deploy wait deployment-successful --deployment-id $ACTIVE_DEPLOYMENT
