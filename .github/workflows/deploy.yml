@@ -22,7 +22,7 @@ jobs:
 
     - name: Download project from S3
       run: |
-        aws s3 cp s3://<your-bucket-name>/<your-zip-file>.zip ./project.zip
+        aws s3 cp s3://my-reallife/mywebapp.zip ./project.zip
 
     - name: Unzip project
       run: |
@@ -31,11 +31,11 @@ jobs:
     - name: Deploy using AWS CodeDeploy
       run: |
         aws deploy create-deployment \
-          --application-name <your-application-name> \
-          --deployment-group-name <your-deployment-group-name> \
-          --s3-location bucket=<your-bucket-name>,key=<your-zip-file>.zip,bundleType=zip
+          --application-name production \
+          --deployment-group-name mydg \
+          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip
 
     - name: Check deployment status
       run: |
-        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name <your-application-name> --deployment-group-name <your-deployment-group-name> --query "deployments[0]" --output text)
+        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
         aws deploy get-deployment --deployment-id $DEPLOYMENT_ID
