@@ -20,14 +20,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Download project from S3
-      run: |
-        aws s3 cp s3://my-reallife/mywebapp.zip ./project.zip
-
-    - name: Unzip project
-      run: |
-        unzip project.zip -d ./project
-
     - name: Check if there is an active deployment
       id: check_deployment
       run: |
@@ -46,6 +38,16 @@ jobs:
         echo "Waiting for active deployment $ACTIVE_DEPLOYMENT to finish..."
         aws deploy wait deployment-successful --deployment-id $ACTIVE_DEPLOYMENT
         echo "Deployment $ACTIVE_DEPLOYMENT is complete."
+
+    - name: Delete previous project from S3
+      run: |
+        echo "Deleting previous project from S3..."
+        aws s3 rm s3://my-reallife/mywebapp.zip
+
+    - name: Upload new project to S3
+      run: |
+        echo "Uploading new project to S3..."
+        aws s3 cp ./project.zip s3://my-reallife/mywebapp.zip
 
     - name: Deploy using AWS CodeDeploy
       run: |
