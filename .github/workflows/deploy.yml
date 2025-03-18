@@ -20,32 +20,10 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Download project from S3
+    - name: Create a zip of the project files
       run: |
-        aws s3 cp s3://my-reallife/mywebapp.zip ./project.zip
-
-    - name: Unzip project
-      run: |
-        unzip project.zip -d ./project
-
-    - name: Check if there is an active deployment
-      id: check_deployment
-      run: |
-        ACTIVE_DEPLOYMENT=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
-        echo "Active deployment ID: $ACTIVE_DEPLOYMENT"
-        if [ "$ACTIVE_DEPLOYMENT" != "None" ] && [ "$ACTIVE_DEPLOYMENT" != "" ]; then
-          echo "There is already an active deployment with ID $ACTIVE_DEPLOYMENT."
-          echo "Active Deployment ID=$ACTIVE_DEPLOYMENT" >> $GITHUB_ENV
-        else
-          echo "No active deployments found."
-        fi
-
-    - name: Wait for active deployment to finish (if any)
-      if: env.ACTIVE_DEPLOYMENT != 'None' && env.ACTIVE_DEPLOYMENT != ''
-      run: |
-        echo "Waiting for active deployment $ACTIVE_DEPLOYMENT to finish..."
-        aws deploy wait deployment-successful --deployment-id $ACTIVE_DEPLOYMENT
-        echo "Deployment $ACTIVE_DEPLOYMENT is complete."
+        echo "Creating a zip file of the project..."
+        zip -r project.zip .
 
     - name: Delete previous project from S3
       run: |
@@ -55,7 +33,7 @@ jobs:
     - name: Upload new project to S3
       run: |
         echo "Uploading new project to S3..."
-        aws s3 cp ./project.zip s3://my-reallife/mywebapp.zip
+        aws s3 cp project.zip s3://my-reallife/mywebapp.zip
 
     - name: Deploy using AWS CodeDeploy
       run: |
