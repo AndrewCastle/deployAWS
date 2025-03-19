@@ -20,6 +20,15 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
+    - name: Set up SonarCloud
+      uses: SonarSource/sonarcloud-github-action@master
+      with:
+        sonar-token: ${{ secrets.SONAR_TOKEN }}
+
+    - name: SonarCloud Analysis
+      run: |
+        sonar-scanner
+
     - name: Create a zip of the project files
       run: |
         echo "Creating a zip file of the project..."
