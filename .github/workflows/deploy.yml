@@ -22,13 +22,6 @@ jobs:
       with:
         args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
     
-    - name: SonarCloud Analysis
-      run: |
-        sonar-scanner \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-          -Dsonar.organization=${{ secrets.SONAR_ORG }}
-    
     - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
