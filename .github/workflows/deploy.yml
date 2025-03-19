@@ -11,15 +11,27 @@ jobs:
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up AWS CLI
-      uses: aws-actions/configure-aws-credentials@v1
+      uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
+    - name: Set up SonarCloud
+      uses: sonarsource/sonarqube-scan-action@v5.0.0
+      with:
+        args: "-Dsonar.login=${{ secrets.SONAR_TOKEN }} -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
+        
+    - name: SonarCloud Analysis
+      run: |
+        sonar-scanner \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.organization=${{ secrets.SONAR_ORG }}
+          
     - name: Create a zip of the project files
       run: |
         echo "Creating a zip file of the project..."
