@@ -32,7 +32,6 @@ jobs:
     - name: SonarCloud Analysis
       run: |
         sonar-scanner \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
           -Dsonar.organization=${{ secrets.SONAR_ORG }}
 
