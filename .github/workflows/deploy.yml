@@ -23,7 +23,7 @@ jobs:
     - name: Set up SonarCloud
       uses: SonarSource/sonarcloud-github-action@master
       with:
-        sonar-token: ${{ secrets.SONAR_TOKEN }}
+        args: "-Dsonar.login=${{ secrets.SONAR_TOKEN }}"
 
     - name: SonarCloud Analysis
       run: |
