@@ -22,14 +22,6 @@ jobs:
       with:
         args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
 
-    - name: SonarCloud Analysis (Continue on Error)
-      run: |
-        sonar-scanner \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-          -Dsonar.organization=${{ secrets.SONAR_ORG }} || echo "SonarCloud analysis failed, continuing execution"
-
-    # Verificación del Quality Gate después del análisis
     - name: Check SonarCloud Quality Gate status
       run: |
         echo "Checking SonarCloud Quality Gate status..."
