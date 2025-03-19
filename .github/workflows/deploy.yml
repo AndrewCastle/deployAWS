@@ -25,13 +25,12 @@ jobs:
     - name: Check SonarCloud Quality Gate status
       run: |
         echo "Checking SonarCloud Quality Gate status..."
-        RESULT=$(curl -s -u ${{ secrets.SONAR_TOKEN }} "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}")
+        RESULT=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}")
         STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
-
+    
         if [ "$STATUS" != "OK" ]; then
           echo "SonarCloud Quality Gate failed! Status: $STATUS"
-          # Si la Quality Gate falla, se puede elegir detener el flujo o continuar.
-          exit 1  # Quita este exit 1 si prefieres que el flujo continúe.
+          exit 1  # Detiene el flujo si la Quality Gate falla.
         else
           echo "SonarCloud Quality Gate passed!"
         fi
