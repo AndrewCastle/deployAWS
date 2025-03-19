@@ -22,11 +22,27 @@ jobs:
       with:
         args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
 
-    - name: Get SonarCloud issues
+    - name: SonarCloud Analysis (Continue on Error)
       run: |
-        echo "Fetching SonarCloud issues..."
-        curl -s -u ${{ secrets.SONAR_TOKEN }} "https://sonarcloud.io/api/issues/search?componentKeys=${{ secrets.SONAR_PROJECT_KEY }}&statuses=OPEN" > issues.json
-        cat issues.json
+        sonar-scanner \
+          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+          -Dsonar.organization=${{ secrets.SONAR_ORG }} || echo "SonarCloud analysis failed, continuing execution"
+
+    # Verificación del Quality Gate después del análisis
+    - name: Check SonarCloud Quality Gate status
+      run: |
+        echo "Checking SonarCloud Quality Gate status..."
+        RESULT=$(curl -s -u ${{ secrets.SONAR_TOKEN }} "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}")
+        STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
+
+        if [ "$STATUS" != "OK" ]; then
+          echo "SonarCloud Quality Gate failed! Status: $STATUS"
+          # Si la Quality Gate falla, se puede elegir detener el flujo o continuar.
+          exit 1  # Quita este exit 1 si prefieres que el flujo continúe.
+        else
+          echo "SonarCloud Quality Gate passed!"
+        fi
     
     - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v4.1.0
