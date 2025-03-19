@@ -25,14 +25,26 @@ jobs:
     - name: Check SonarCloud Quality Gate status
       run: |
         echo "Checking SonarCloud Quality Gate status..."
+        
+        # Llamada a la API de SonarCloud para obtener el estado de la Quality Gate
         RESULT=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}")
-        echo "SonarCloud API response: $RESULT"  # Mostrar la respuesta completa para depuración.
+        
+        # Mostrar la respuesta completa para depuración
+        echo "SonarCloud API response: $RESULT"
+        
+        # Obtener el estado de la Quality Gate
         STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
         
+        # Si el estado es ERROR, mostrar detalles del fallo
         if [ "$STATUS" != "OK" ]; then
           echo "SonarCloud Quality Gate failed! Status: $STATUS"
-          echo "Details: $RESULT"  # Mostrar detalles del error para depuración.
-          exit 1  # Detiene el flujo si la Quality Gate falla.
+          
+          # Iterar sobre las condiciones de fallo y mostrar el motivo de cada una
+          echo "Details:"
+          echo $RESULT | jq -r '.projectStatus.conditions[] | select(.status == "ERROR") | "Metric: \(.metricKey) - Actual Value: \(.actualValue) - Error Threshold: \(.errorThreshold)"'
+          
+          # Detener el flujo con exit 1 si la Quality Gate falla
+          exit 1
         else
           echo "SonarCloud Quality Gate passed!"
         fi
