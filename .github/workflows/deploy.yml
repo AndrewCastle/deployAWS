@@ -25,15 +25,19 @@ jobs:
     - name: Set up SonarCloud
       uses: sonarsource/sonarqube-scan-action@v5.0.0
       with:
-        args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
-        
+        args: >
+          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} 
+          -Dsonar.organization=${{ secrets.SONAR_ORG }} 
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}  # Agregar el token aquí también
+
     - name: SonarCloud Analysis
       env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}  # Pasar el token como variable de entorno
       run: |
         sonar-scanner \
           -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-          -Dsonar.organization=${{ secrets.SONAR_ORG }}
+          -Dsonar.organization=${{ secrets.SONAR_ORG }} \
+          -Dsonar.token=${{ secrets.SONAR_TOKEN }}
           
     - name: Create a zip of the project files
       run: |
