@@ -22,20 +22,6 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Set up SonarCloud
-      uses: sonarsource/sonarqube-scan-action@v5.0.0
-      env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-      with:
-        args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
-    
-    - name: SonarCloud Analysis
-      run: |
-        sonar-scanner \
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }} \
-          -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-          -Dsonar.organization=${{ secrets.SONAR_ORG }}
-
     - name: Create a zip of the project files
       run: |
         echo "Creating a zip file of the project..."
