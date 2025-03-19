@@ -1,4 +1,4 @@
-var hola =
-
-function name(params) {
-    
+var hola = 1;
+var hola = 1;
+var hola = 1;
+var hola = 1;
