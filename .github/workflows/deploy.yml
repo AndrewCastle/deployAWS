@@ -37,13 +37,11 @@ jobs:
           echo "SonarCloud Quality Gate passed!"
         fi
     
-    - name: Set up AWS CLI with AWS Secrets Manager
-      run: |
-        echo "Retrieving AWS credentials from Secrets Manager..."
-        SECRETS=$(aws secretsmanager get-secret-value --secret-id my-app-credentials --query "SecretString" --output text --region ${{ secrets.AWS_REGION }})
-        
-        export AWS_ACCESS_KEY_ID=$(echo $SECRETS | jq -r '.AWS_ACCESS_KEY_ID')
-        export AWS_SECRET_ACCESS_KEY=$(echo $SECRETS | jq -r '.AWS_SECRET_ACCESS_KEY') 
+    - name: Set up AWS credentials from Secrets Manager
+      uses: aws-actions/aws-secretsmanager-get-secrets@v2
+      with:
+        secret-ids: my-app-credentials
+        parse-json-secrets: true
 
     - name: Create a zip of the project files
       run: |
