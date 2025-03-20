@@ -20,6 +20,7 @@ jobs:
       with:
         role-to-assume: arn:aws:iam::390403859928:role/GitHubActionsOIDCRole
         aws-region: ${{ secrets.AWS_REGION }}
+        audience: sts.amazonaws.com
     
     - name: Set up AWS credentials from Secrets Manager
       uses: aws-actions/aws-secretsmanager-get-secrets@v2
