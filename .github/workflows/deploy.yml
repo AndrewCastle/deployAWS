@@ -42,6 +42,7 @@ jobs:
       with:
         secret-ids: my-app-credentials
         parse-json-secrets: true
+        region: ${{ secrets.AWS_REGION }}
 
     - name: Create a zip of the project files
       run: |
