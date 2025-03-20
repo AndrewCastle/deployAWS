@@ -18,7 +18,7 @@ jobs:
     - name: Set up AWS credentials using OIDC
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
-        role-to-assume: arn:aws:iam::<AWS_ACCOUNT_ID>:role/GitHubActionsOIDCRole
+        role-to-assume: arn:aws:iam::390403859928:role/GitHubActionsOIDCRole
         aws-region: ${{ secrets.AWS_REGION }}
     
     - name: Set up AWS credentials from Secrets Manager
