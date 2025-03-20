@@ -61,12 +61,31 @@ jobs:
 
     - name: Deploy using AWS CodeDeploy
       run: |
-        aws deploy create-deployment \
+        DEPLOYMENT_ID=$(aws deploy create-deployment \
           --application-name production \
           --deployment-group-name mydg \
-          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip
+          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip \
+          --query "deploymentId" \
+          --output text)
+        echo "Deployment started with ID: $DEPLOYMENT_ID"
 
-    - name: Check deployment status
+    - name: Monitor deployment status
       run: |
-        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
-        aws deploy get-deployment --deployment-id $DEPLOYMENT_ID
+        echo "Monitoring deployment status..."
+        STATUS="InProgress"
+        while [ "$STATUS" == "InProgress" ]; do
+          echo "Checking deployment status..."
+          RESULT=$(aws deploy get-deployment --deployment-id $DEPLOYMENT_ID)
+          STATUS=$(echo $RESULT | jq -r '.deploymentInfo.status')
+          echo "Current deployment status: $STATUS"
+          if [ "$STATUS" == "Failed" ]; then
+            echo "Deployment failed!"
+            echo "Details: $RESULT"
+            exit 1
+          fi
+          if [ "$STATUS" == "Succeeded" ]; then
+            echo "Deployment succeeded!"
+            break
+          fi
+          sleep 5
+        done
