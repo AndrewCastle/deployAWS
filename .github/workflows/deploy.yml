@@ -8,8 +8,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    permissions:
-      id-token: write
     
     steps:
     - name: Checkout code
@@ -17,12 +15,34 @@ jobs:
       with:
         fetch-depth: 0 
 
-    - name: Set up AWS credentials using OIDC
+    - name: Set up SonarCloud
+      uses: sonarsource/sonarqube-scan-action@v5.0.0
+      env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      with:
+        args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
+
+    - name: Check SonarCloud Quality Gate status
+      run: |
+        echo "Checking SonarCloud Quality Gate status..."
+        RESULT=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}")
+        echo "SonarCloud API response: $RESULT"
+        STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
+        if [ "$STATUS" != "OK" ]; then
+          echo "SonarCloud Quality Gate failed! Status: $STATUS"
+          echo "Details:"
+          echo $RESULT | jq -r '.projectStatus.conditions[] | select(.status == "ERROR") | "Metric: \(.metricKey) - Actual Value: \(.actualValue) - Error Threshold: \(.errorThreshold)"'
+          exit 1
+        else
+          echo "SonarCloud Quality Gate passed!"
+        fi
+
+    - name: Set up AWS CLI
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
-        role-to-assume: arn:aws:iam::390403859928:role/OICDGitHubAWS
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
-        audience: sts.amazonaws.com
 
     - name: Create a zip of the project files
       run: |
