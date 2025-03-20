@@ -36,11 +36,15 @@ jobs:
         else
           echo "SonarCloud Quality Gate passed!"
         fi
+
+    - name: Add AWS Region
+      uses: aws-actions/configure-aws-credentials@v4.1.0
+      with:
+        aws-region: ${{ secrets.AWS_REGION }}
     
     - name: Set up AWS credentials from Secrets Manager
       uses: aws-actions/aws-secretsmanager-get-secrets@v2
       with:
-        region: ${{ secrets.AWS_REGION }}
         secret-ids: my-app-credentials
         parse-json-secrets: true
 
