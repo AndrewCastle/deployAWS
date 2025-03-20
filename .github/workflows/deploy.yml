@@ -61,15 +61,46 @@ jobs:
 
     - name: Deploy using AWS CodeDeploy
       run: |
-        DEPLOYMENT_ID=$(aws deploy create-deployment \
+        aws deploy create-deployment \
           --application-name production \
           --deployment-group-name mydg \
-          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip \
-          --query "deploymentId" \
-          --output text)
-        echo "Deployment started with ID: $DEPLOYMENT_ID"
+          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip
 
-    - name: Check deployment status
+    - name: Monitor deployment status
       run: |
+        # Obtener el ID del despliegue más reciente
         DEPLOYMENT_ID=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
-        aws deploy get-deployment --deployment-id $DEPLOYMENT_ID
+        echo "Deployment started with ID: $DEPLOYMENT_ID"
+    
+        # Inicializar el estado del despliegue como 'InProgress'
+        STATUS="InProgress"
+        
+        # Monitorear el estado del despliegue hasta que se complete (fallido o exitoso)
+        while [ "$STATUS" == "InProgress" ]; do
+          echo "Checking deployment status..."
+    
+          # Consultar el estado del despliegue utilizando el ID obtenido
+          RESULT=$(aws deploy get-deployment --deployment-id $DEPLOYMENT_ID)
+    
+          # Extraer el estado del despliegue de la respuesta
+          STATUS=$(echo $RESULT | jq -r '.deploymentInfo.status')
+          
+          # Mostrar el estado actual del despliegue
+          echo "Current deployment status: $STATUS"
+          
+          # Si el estado es 'Failed', imprimir detalles y terminar el flujo
+          if [ "$STATUS" == "Failed" ]; then
+            echo "Deployment failed!"
+            echo "Details: $RESULT"
+            exit 1
+          fi
+          
+          # Si el estado es 'Succeeded', indicar éxito y salir del bucle
+          if [ "$STATUS" == "Succeeded" ]; then
+            echo "Deployment succeeded!"
+            break
+          fi
+          
+          # Si el estado sigue siendo 'InProgress', esperar 30 segundos antes de verificar nuevamente
+          sleep 30
+        done
