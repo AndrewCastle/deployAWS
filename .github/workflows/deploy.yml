@@ -17,26 +17,12 @@ jobs:
       with:
         fetch-depth: 0 
 
-    - name: Debug GitHub Actions logs
-      run: |
-        echo "GitHub Workflow: $GITHUB_WORKFLOW"
-        echo "Git Commit SHA: $GITHUB_SHA"
-        echo "GitHub Repository: $GITHUB_REPOSITORY"
-        echo "GitHub Ref: $GITHUB_REF"
-        echo "AWS Region: ${{ secrets.AWS_REGION }}"
-
     - name: Set up AWS credentials using OIDC
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
-        role-to-assume: arn:aws:iam::390403859928:role/GitHubActionsOIDCRole
+        role-to-assume: arn:aws:iam::390403859928:role/OICDGitHubAWS
         aws-region: ${{ secrets.AWS_REGION }}
         audience: sts.amazonaws.com
-    
-    - name: Set up AWS credentials from Secrets Manager
-      uses: aws-actions/aws-secretsmanager-get-secrets@v2
-      with:
-        secret-ids: my-app-credentials
-        parse-json-secrets: true
 
     - name: Create a zip of the project files
       run: |
