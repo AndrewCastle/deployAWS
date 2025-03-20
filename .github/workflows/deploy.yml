@@ -102,5 +102,5 @@ jobs:
           fi
           
           # Si el estado sigue siendo 'InProgress', esperar 30 segundos antes de verificar nuevamente
-          sleep 30
+          sleep 5
         done
