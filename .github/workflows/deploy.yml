@@ -72,6 +72,7 @@ jobs:
     - name: Monitor deployment status
       run: |
         echo "Monitoring deployment status..."
+        echo "Deployment ID: $DEPLOYMENT_ID"  # Asegúrate de que esta línea imprima el ID correcto
         STATUS="InProgress"
         while [ "$STATUS" == "InProgress" ]; do
           echo "Checking deployment status..."
