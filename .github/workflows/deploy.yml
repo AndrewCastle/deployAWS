@@ -40,9 +40,9 @@ jobs:
     - name: Set up AWS credentials from Secrets Manager
       uses: aws-actions/aws-secretsmanager-get-secrets@v2
       with:
+        region: ${{ secrets.AWS_REGION }}
         secret-ids: my-app-credentials
         parse-json-secrets: true
-        region: ${{ secrets.AWS_REGION }}
 
     - name: Create a zip of the project files
       run: |
