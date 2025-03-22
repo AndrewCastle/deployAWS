@@ -52,23 +52,23 @@ jobs:
     - name: Eliminar el proyecto anterior de S3
       run: |
         echo "Eliminando el proyecto anterior de S3..."
-        aws s3 rm s3://my-reallife/mywebapp.zip
+        aws s3 rm s3://${{ secrets.BUCKET_NAME }}/${{ secrets.BUCKET_OBJECT_NAME }}
 
     - name: Subir el nuevo proyecto a S3
       run: |
         echo "Subiendo el nuevo proyecto a S3..."
-        aws s3 cp project.zip s3://my-reallife/mywebapp.zip
+        aws s3 cp project.zip s3://${{ secrets.BUCKET_NAME }}/${{ secrets.BUCKET_OBJECT_NAME }}
 
     - name: Desplegar usando AWS CodeDeploy
       run: |
         aws deploy create-deployment \
-          --application-name production \
-          --deployment-group-name mydg \
-          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip
+          --application-name ${{ secrets.MY_APPLICATION_NAME }} \
+          --deployment-group-name ${{ secrets.DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=${{ secrets.BUCKET_NAME }},key=${{ secrets.BUCKET_OBJECT_NAME }},bundleType=zip
 
     - name: Monitorear el estado del despliegue
       run: |
-        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
+        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name ${{ secrets.MY_APPLICATION_NAME }} --deployment-group-name ${{ secrets.DEPLOYMENT_GROUP_NAME }} --query "deployments[0]" --output text)
         echo "Despliegue iniciado con ID: $DEPLOYMENT_ID"
         STATUS="InProgress"
         while [ "$STATUS" == "InProgress" ]; do
