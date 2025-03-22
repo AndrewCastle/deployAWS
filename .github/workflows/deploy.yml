@@ -1,4 +1,4 @@
-name: Deploy with Github Actions to an instance EC2
+name: Desplegar con Github Actions a una instancia EC2
 
 on:
   push:
@@ -8,81 +8,81 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Checkout code
+    - name: Revisar el código
       uses: actions/checkout@v4
       with:
         fetch-depth: 0 
 
-    - name: Set up SonarCloud
+    - name: Configurar SonarCloud
       uses: sonarsource/sonarqube-scan-action@v5.0.0
       env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       with:
         args: "-Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} -Dsonar.organization=${{ secrets.SONAR_ORG }}"
 
-    - name: Check SonarCloud Quality Gate status
+    - name: Verificar el estado del Quality Gate de SonarCloud
       run: |
-        echo "Checking SonarCloud Quality Gate status..."
+        echo "Verificando el estado del Quality Gate de SonarCloud..."
         RESULT=$(curl -s -H "Authorization: Bearer ${{ secrets.SONAR_TOKEN }}" "https://sonarcloud.io/api/qualitygates/project_status?projectKey=${{ secrets.SONAR_PROJECT_KEY }}")
-        echo "SonarCloud API response: $RESULT"
+        echo "Respuesta de la API de SonarCloud: $RESULT"
         STATUS=$(echo $RESULT | jq -r '.projectStatus.status')
         if [ "$STATUS" != "OK" ]; then
-          echo "SonarCloud Quality Gate failed! Status: $STATUS"
-          echo "Details:"
-          echo $RESULT | jq -r '.projectStatus.conditions[] | select(.status == "ERROR") | "Metric: \(.metricKey) - Actual Value: \(.actualValue) - Error Threshold: \(.errorThreshold)"'
+          echo "¡Quality Gate de SonarCloud falló! Estado: $STATUS"
+          echo "Detalles:"
+          echo $RESULT | jq -r '.projectStatus.conditions[] | select(.status == "ERROR") | "Métrica: \(.metricKey) - Valor Actual: \(.actualValue) - Umbral de Error: \(.errorThreshold)"'
           exit 1
         else
-          echo "SonarCloud Quality Gate passed!"
+          echo "¡Quality Gate de SonarCloud aprobado!"
         fi
-    
-    - name: Set up AWS CLI
+
+    - name: Configurar AWS CLI
       uses: aws-actions/configure-aws-credentials@v4.1.0
       with:
         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    - name: Create a zip of the project files
+    - name: Crear un archivo zip de los archivos del proyecto
       run: |
-        echo "Creating a zip file of the project..."
+        echo "Creando un archivo zip del proyecto..."
         zip -r project.zip .
 
-    - name: Delete previous project from S3
+    - name: Eliminar el proyecto anterior de S3
       run: |
-        echo "Deleting previous project from S3..."
-        aws s3 rm s3://my-reallife/mywebapp.zip
+        echo "Eliminando el proyecto anterior de S3..."
+        aws s3 rm s3://${{ secrets.BUCKET_NAME }}/${{ secrets.BUCKET_OBJECT_NAME }}
 
-    - name: Upload new project to S3
+    - name: Subir el nuevo proyecto a S3
       run: |
-        echo "Uploading new project to S3..."
-        aws s3 cp project.zip s3://my-reallife/mywebapp.zip
+        echo "Subiendo el nuevo proyecto a S3..."
+        aws s3 cp project.zip s3://${{ secrets.BUCKET_NAME }}/${{ secrets.BUCKET_OBJECT_NAME }}
 
-    - name: Deploy using AWS CodeDeploy
+    - name: Desplegar usando AWS CodeDeploy
       run: |
         aws deploy create-deployment \
-          --application-name production \
-          --deployment-group-name mydg \
-          --s3-location bucket=my-reallife,key=mywebapp.zip,bundleType=zip
+          --application-name ${{ secrets.MY_APPLICATION_NAME }} \
+          --deployment-group-name ${{ secrets.DEPLOYMENT_GROUP_NAME }} \
+          --s3-location bucket=${{ secrets.BUCKET_NAME }},key=${{ secrets.BUCKET_OBJECT_NAME }},bundleType=zip
 
-    - name: Monitor deployment status
+    - name: Monitorear el estado del despliegue
       run: |
-        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name production --deployment-group-name mydg --query "deployments[0]" --output text)
-        echo "Deployment started with ID: $DEPLOYMENT_ID"
+        DEPLOYMENT_ID=$(aws deploy list-deployments --application-name ${{ secrets.MY_APPLICATION_NAME }} --deployment-group-name ${{ secrets.DEPLOYMENT_GROUP_NAME }} --query "deployments[0]" --output text)
+        echo "Despliegue iniciado con ID: $DEPLOYMENT_ID"
         STATUS="InProgress"
         while [ "$STATUS" == "InProgress" ]; do
-          echo "Checking deployment status..."
+          echo "Verificando el estado del despliegue..."
           RESULT=$(aws deploy get-deployment --deployment-id $DEPLOYMENT_ID)
           STATUS=$(echo $RESULT | jq -r '.deploymentInfo.status')
-          echo "Current deployment status: $STATUS"
+          echo "Estado actual del despliegue: $STATUS"
           if [ "$STATUS" == "Failed" ]; then
-            echo "Deployment failed!"
-            echo "Details: $RESULT"
+            echo "¡El despliegue falló!"
+            echo "Detalles: $RESULT"
             exit 1
           fi
           if [ "$STATUS" == "Succeeded" ]; then
-            echo "Deployment succeeded!"
+            echo "¡El despliegue fue exitoso!"
             break
           fi
           sleep 5
